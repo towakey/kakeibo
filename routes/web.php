@@ -11,10 +11,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    $transactions = Auth::user()->transactions()->orderBy('transaction_date', 'desc')->get();
-    return view('dashboard', compact('transactions'));
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [TransactionController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
