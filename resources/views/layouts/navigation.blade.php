@@ -18,6 +18,9 @@
                     <x-nav-link :href="route('transactions.create')" :active="request()->routeIs('transactions.create')">
                         {{ __('取引登録') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('stores.create')" :active="request()->routeIs('stores.create')">
+                        {{ __('店舗登録') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -75,6 +78,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('transactions.create')" :active="request()->routeIs('transactions.create')">
                 {{ __('取引登録') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('stores.create')" :active="request()->routeIs('stores.create')">
+                {{ __('店舗登録') }}
             </x-responsive-nav-link>
         </div>
 
