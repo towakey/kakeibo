@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
 use App\Models\Store;
+use App\Models\Product;
 
 class Transaction extends Model
 {
@@ -15,11 +16,13 @@ class Transaction extends Model
         'user_id',
         'amount',
         'transaction_date',
-        'store_id'
+        'store_id',
+        'product_id'
     ];
 
     protected $casts = [
-        'transaction_date' => 'date'
+        'transaction_date' => 'date',
+        'amount' => 'integer'
     ];
 
     public function user()
@@ -30,5 +33,10 @@ class Transaction extends Model
     public function store()
     {
         return $this->belongsTo(Store::class);
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
     }
 }

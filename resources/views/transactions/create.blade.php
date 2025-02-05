@@ -35,6 +35,26 @@
                         </div>
 
                         <div>
+                            <x-input-label :value="__('商品')" />
+                            <input type="hidden" name="product_id" id="product_id">
+                            <div class="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                @foreach($products as $product)
+                                    <button type="button"
+                                            class="product-button py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            data-product-id="{{ $product->id }}"
+                                            data-default-price="{{ $product->default_price }}"
+                                            onclick="selectProduct(this, {{ $product->id }})">
+                                        {{ $product->name }}
+                                        @if($product->default_price)
+                                            <br><span class="text-sm text-gray-600">¥{{ number_format($product->default_price) }}</span>
+                                        @endif
+                                    </button>
+                                @endforeach
+                            </div>
+                            <x-input-error class="mt-2" :messages="$errors->get('product_id')" />
+                        </div>
+
+                        <div>
                             <x-input-label for="amount" :value="__('金額')" />
                             <x-text-input id="amount" name="amount" type="number" class="mt-1 block w-full" required />
                             <x-input-error class="mt-2" :messages="$errors->get('amount')" />
@@ -63,6 +83,27 @@
             
             // hidden inputに選択された店舗IDをセット
             document.getElementById('store_id').value = storeId;
+        }
+
+        function selectProduct(button, productId) {
+            // すべての商品ボタンから選択状態を解除
+            document.querySelectorAll('.product-button').forEach(btn => {
+                btn.classList.remove('bg-indigo-500', 'text-white');
+                btn.classList.add('border-gray-300');
+            });
+            
+            // クリックされたボタンを選択状態にする
+            button.classList.remove('border-gray-300');
+            button.classList.add('bg-indigo-500', 'text-white');
+            
+            // hidden inputに選択された商品IDをセット
+            document.getElementById('product_id').value = productId;
+
+            // 商品の標準価格があれば金額欄にセット
+            const defaultPrice = button.getAttribute('data-default-price');
+            if (defaultPrice) {
+                document.getElementById('amount').value = defaultPrice;
+            }
         }
     </script>
 </x-app-layout>
