@@ -20,14 +20,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
-    Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
-
-    Route::get('/stores/create', [StoreController::class, 'create'])->name('stores.create');
-    Route::post('/stores', [StoreController::class, 'store'])->name('stores.store');
-
-    Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
-    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::resource('stores', StoreController::class);
+    Route::resource('products', ProductController::class);
+    Route::resource('transactions', TransactionController::class);
 });
 
 require __DIR__.'/auth.php';

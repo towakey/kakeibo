@@ -18,11 +18,11 @@
                     <x-nav-link :href="route('transactions.create')" :active="request()->routeIs('transactions.create')">
                         {{ __('取引登録') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('stores.create')" :active="request()->routeIs('stores.create')">
-                        {{ __('店舗登録') }}
+                    <x-nav-link :href="route('stores.index')" :active="request()->routeIs('stores.*')">
+                        {{ __('店舗管理') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('products.create')" :active="request()->routeIs('products.create')">
-                        {{ __('商品登録') }}
+                    <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
+                        {{ __('商品管理') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -82,11 +82,11 @@
             <x-responsive-nav-link :href="route('transactions.create')" :active="request()->routeIs('transactions.create')">
                 {{ __('取引登録') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('stores.create')" :active="request()->routeIs('stores.create')">
-                {{ __('店舗登録') }}
+            <x-responsive-nav-link :href="route('stores.index')" :active="request()->routeIs('stores.*')">
+                {{ __('店舗管理') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('products.create')" :active="request()->routeIs('products.create')">
-                {{ __('商品登録') }}
+            <x-responsive-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
+                {{ __('商品管理') }}
             </x-responsive-nav-link>
         </div>
 
