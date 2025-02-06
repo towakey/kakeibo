@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use App\Models\Product; // Productモデルをインポートする
 
 class ProductController extends Controller
 {
@@ -24,9 +23,13 @@ class ProductController extends Controller
         $product = new Product();
         $product->user_id = auth()->id();
         $product->name = $validated['name'];
-        $product->description = $validated['description'];
-        $product->default_price = $validated['default_price'];
+        $product->description = $validated['description'] ?? null;
+        $product->default_price = $validated['default_price'] ?? null;
         $product->save();
+
+        if ($request->expectsJson()) {
+            return response()->json($product);
+        }
 
         return redirect()->route('dashboard')->with('success', '商品を登録しました。');
     }
