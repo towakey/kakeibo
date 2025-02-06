@@ -36,28 +36,27 @@
 
                         <div>
                             <x-input-label :value="__('商品')" />
-                            <input type="hidden" name="product_id" id="product_id">
-                            <div class="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                @foreach($products as $product)
-                                    <button type="button"
-                                            class="product-button py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            data-product-id="{{ $product->id }}"
-                                            data-default-price="{{ $product->default_price }}"
-                                            onclick="selectProduct(this, {{ $product->id }})">
-                                        {{ $product->name }}
-                                        @if($product->default_price)
-                                            <br><span class="text-sm text-gray-600">¥{{ number_format($product->default_price) }}</span>
-                                        @endif
-                                    </button>
-                                @endforeach
+                            <div class="mt-2 space-y-4">
+                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    @foreach($products as $product)
+                                        <button type="button"
+                                                class="product-button py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                data-product-id="{{ $product->id }}"
+                                                data-product-name="{{ $product->name }}"
+                                                data-default-price="{{ $product->default_price }}"
+                                                onclick="toggleProduct(this)">
+                                            {{ $product->name }}
+                                            @if($product->default_price)
+                                                <br><span class="text-sm text-gray-600">¥{{ number_format($product->default_price) }}</span>
+                                            @endif
+                                        </button>
+                                    @endforeach
+                                </div>
+                                <div id="selected-products" class="mt-4">
+                                    <!-- Selected products will be displayed here -->
+                                </div>
                             </div>
-                            <x-input-error class="mt-2" :messages="$errors->get('product_id')" />
-                        </div>
-
-                        <div>
-                            <x-input-label for="amount" :value="__('金額')" />
-                            <x-text-input id="amount" name="amount" type="number" class="mt-1 block w-full" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('amount')" />
+                            <x-input-error class="mt-2" :messages="$errors->get('products')" />
                         </div>
 
                         <div class="flex items-center gap-4">
@@ -71,38 +70,63 @@
 
     <script>
         function selectStore(button, storeId) {
-            // すべての店舗ボタンから選択状態を解除
             document.querySelectorAll('.store-button').forEach(btn => {
                 btn.classList.remove('bg-indigo-500', 'text-white');
-                btn.classList.add('border-gray-300');
             });
             
-            // クリックされたボタンを選択状態にする
-            button.classList.remove('border-gray-300');
             button.classList.add('bg-indigo-500', 'text-white');
-            
-            // hidden inputに選択された店舗IDをセット
             document.getElementById('store_id').value = storeId;
         }
 
-        function selectProduct(button, productId) {
-            // すべての商品ボタンから選択状態を解除
-            document.querySelectorAll('.product-button').forEach(btn => {
-                btn.classList.remove('bg-indigo-500', 'text-white');
-                btn.classList.add('border-gray-300');
-            });
+        function toggleProduct(button) {
+            const productId = button.dataset.productId;
+            const isSelected = button.classList.contains('bg-indigo-500');
             
-            // クリックされたボタンを選択状態にする
-            button.classList.remove('border-gray-300');
-            button.classList.add('bg-indigo-500', 'text-white');
-            
-            // hidden inputに選択された商品IDをセット
-            document.getElementById('product_id').value = productId;
+            if (isSelected) {
+                button.classList.remove('bg-indigo-500', 'text-white');
+                document.querySelector(`#product-row-${productId}`).remove();
+            } else {
+                button.classList.add('bg-indigo-500', 'text-white');
+                addProductRow(
+                    productId,
+                    button.dataset.productName,
+                    button.dataset.defaultPrice
+                );
+            }
+        }
 
-            // 商品の標準価格があれば金額欄にセット
-            const defaultPrice = button.getAttribute('data-default-price');
-            if (defaultPrice) {
-                document.getElementById('amount').value = defaultPrice;
+        function addProductRow(productId, productName, defaultPrice) {
+            const selectedProducts = document.getElementById('selected-products');
+            const rowId = `product-row-${productId}`;
+            
+            if (!document.getElementById(rowId)) {
+                const row = document.createElement('div');
+                row.id = rowId;
+                row.className = 'flex items-center gap-4 p-4 border rounded-lg';
+                row.innerHTML = `
+                    <div class="flex-1">
+                        <strong>${productName}</strong>
+                        <input type="hidden" name="products[${productId}][id]" value="${productId}">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="whitespace-nowrap">数量:
+                            <input type="number" 
+                                name="products[${productId}][quantity]" 
+                                value="1" 
+                                min="1" 
+                                class="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </label>
+                        <label class="whitespace-nowrap">価格:
+                            <input type="number" 
+                                name="products[${productId}][price]" 
+                                value="${defaultPrice || ''}" 
+                                min="0" 
+                                required
+                                class="w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </label>
+                    </div>
+                `;
+                selectedProducts.appendChild(row);
             }
         }
     </script>

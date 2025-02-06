@@ -14,15 +14,12 @@ class Transaction extends Model
 
     protected $fillable = [
         'user_id',
-        'amount',
         'transaction_date',
         'store_id',
-        'product_id'
     ];
 
     protected $casts = [
         'transaction_date' => 'date',
-        'amount' => 'integer'
     ];
 
     public function user()
@@ -35,8 +32,10 @@ class Transaction extends Model
         return $this->belongsTo(Store::class);
     }
 
-    public function product()
+    public function products()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsToMany(Product::class, 'transaction_products')
+            ->withPivot('quantity', 'price')
+            ->withTimestamps();
     }
 }
