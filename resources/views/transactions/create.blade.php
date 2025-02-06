@@ -275,7 +275,7 @@
                 if (!$(`#${rowId}`).length) {
                     const row = $('<div>')
                         .attr('id', rowId)
-                        .addClass('flex items-center gap-4 p-4 border rounded-lg')
+                        .addClass('flex items-center gap-4 p-4 border rounded-lg product-row')
                         .html(`
                             <div class="flex-1">
                                 <strong>${productName}</strong>
@@ -287,7 +287,28 @@
                                         name="products[${productId}][quantity]" 
                                         value="1" 
                                         min="1" 
-                                        class="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        class="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 product-quantity">
+                                </label>
+                                <label class="whitespace-nowrap">消費税:
+                                    <select name="products[${productId}][tax_type]" class="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 product-tax">
+                                        <option value="0">非課税</option>
+                                        <option value="8">8%</option>
+                                        <option value="10" selected>10%</option>
+                                    </select>
+                                </label>
+                                <label class="whitespace-nowrap">割引額:
+                                    <input type="number" 
+                                        name="products[${productId}][discount_amount]" 
+                                        step="0.01" 
+                                        placeholder="割引額" 
+                                        class="w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 product-discount-amount">
+                                </label>
+                                <label class="whitespace-nowrap">割引率:
+                                    <input type="number" 
+                                        name="products[${productId}][discount_rate]" 
+                                        step="0.01" 
+                                        placeholder="割引率" 
+                                        class="w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 product-discount-rate">
                                 </label>
                                 <label class="whitespace-nowrap">価格:
                                     <input type="number" 
@@ -295,7 +316,8 @@
                                         value="${defaultPrice || ''}" 
                                         min="0" 
                                         required
-                                        class="w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        class="w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 product-price"
+                                        data-base-price="${defaultPrice || 0}">
                                 </label>
                             </div>
                         `);
@@ -315,3 +337,61 @@
     </script>
     @endpush
 </x-app-layout>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Transaction create page script loaded');
+  function recalcPrice(productRow) {
+    const quantityInput = productRow.querySelector('input.product-quantity');
+    const taxSelect = productRow.querySelector('select.product-tax');
+    const discountAmountInput = productRow.querySelector('input.product-discount-amount');
+    const discountRateInput = productRow.querySelector('input.product-discount-rate');
+    const priceInput = productRow.querySelector('input.product-price');
+    
+    const basePrice = parseFloat(priceInput.getAttribute('data-base-price')) || 0;
+    const quantity = parseFloat(quantityInput.value) || 1;
+    const taxRate = parseFloat(taxSelect.value) || 0;
+    const discountAmount = parseFloat(discountAmountInput.value) || 0;
+    const discountRate = parseFloat(discountRateInput.value) || 0;
+    
+    let discount = 0;
+    if (discountAmount > 0) {
+      discount = discountAmount;
+    } else if (discountRate > 0) {
+      discount = basePrice * quantity * (discountRate / 100);
+    }
+    let finalPrice = (basePrice * quantity - discount);
+    if (taxRate > 0) {
+      finalPrice = finalPrice * (1 + taxRate / 100);
+    }
+    console.log('recalcPrice called:', { basePrice, quantity, taxRate, discountAmount, discountRate, finalPrice });
+    priceInput.value = finalPrice.toFixed(2);
+  }
+  
+  document.addEventListener('input', function(e) {
+    console.log('input event captured:', e.target);
+    const target = e.target;
+    if (target.matches('input.product-quantity, select.product-tax, input.product-discount-amount, input.product-discount-rate')) {
+      const row = target.closest('.product-row');
+      if (row) {
+        recalcPrice(row);
+      } else {
+        console.log('No product-row container found for target:', target);
+      }
+    }
+  });
+  
+  document.addEventListener('change', function(e) {
+    console.log('change event captured:', e.target);
+    const target = e.target;
+    if (target.matches('input.product-quantity, select.product-tax, input.product-discount-amount, input.product-discount-rate')) {
+      const row = target.closest('.product-row');
+      if (row) {
+        recalcPrice(row);
+      } else {
+        console.log('No product-row container found for target:', target);
+      }
+    }
+  });
+});
+</script>
