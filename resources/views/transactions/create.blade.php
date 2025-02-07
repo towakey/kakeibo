@@ -354,18 +354,28 @@
                 const discountAmountInput = productRow.find('.product-discount-amount');
                 const discountRateInput = productRow.find('.product-discount-rate');
                 const priceInput = productRow.find('.product-price');
+                const taxTypeSelect = productRow.find('select[name$="[tax_type]"]');
                 const basePrice = parseFloat(priceInput.data('base-price')) || 0;
 
                 const calculatePrice = () => {
                     const quantity = parseFloat(quantityInput.val()) || 1;
                     const discountAmount = parseFloat(discountAmountInput.val()) || 0;
                     const discountRate = parseFloat(discountRateInput.val()) || 0;
+                    const taxRate = parseInt(taxTypeSelect.val()) || 0;
                     
+                    // 基本価格 × 数量
                     let price = basePrice * quantity;
+
+                    // 割引を適用
                     if (discountAmount > 0) {
                         price -= discountAmount;
                     } else if (discountRate > 0) {
                         price -= price * (discountRate / 100);
+                    }
+
+                    // 税率を適用
+                    if (taxRate > 0) {
+                        price = price * (1 + taxRate / 100);
                     }
                     
                     priceInput.val(Math.max(0, Math.round(price)));
@@ -373,6 +383,7 @@
 
                 // イベントリスナーを設定
                 quantityInput.on('input', calculatePrice);
+                taxTypeSelect.on('change', calculatePrice);
                 discountAmountInput.on('input', () => {
                     if (discountAmountInput.val()) {
                         discountRateInput.val('');
