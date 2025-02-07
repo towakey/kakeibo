@@ -197,7 +197,7 @@
     <script>
         $(document).ready(function() {
             // Store Modal Functions
-            $('#openStoreModalBtn').click(function() {
+            $('#showStoreModalBtn').click(function() {
                 $('#storeModal').removeClass('hidden');
             });
 
@@ -439,9 +439,9 @@
                                 </label>
                                 <label class="whitespace-nowrap">消費税:
                                     <select name="products[${productId}][tax_type]" class="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 product-tax">
-                                        <option value="0" ${defaultTaxType == 0 ? 'selected' : ''}>非課税</option>
-                                        <option value="8" ${defaultTaxType == 8 ? 'selected' : ''}>8%</option>
-                                        <option value="10" ${defaultTaxType == 10 ? 'selected' : ''}>10%</option>
+                                        <option value="0">非課税</option>
+                                        <option value="8">8%</option>
+                                        <option value="10" selected>10%</option>
                                     </select>
                                 </label>
                                 <label class="whitespace-nowrap">割引額:
