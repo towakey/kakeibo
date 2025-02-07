@@ -41,7 +41,7 @@
                         <div>
                             <div class="flex justify-between items-center">
                                 <x-input-label :value="__('商品')" />
-                                <button type="button" id="openProductModalBtn" class="text-sm text-blue-600 hover:text-blue-800">
+                                <button type="button" id="showProductModalBtn" class="text-sm text-blue-600 hover:text-blue-800">
                                     <i class="fas fa-plus"></i> 新規商品登録
                                 </button>
                             </div>
@@ -192,15 +192,13 @@
             });
 
             // Product Modal Functions
-            $('#openProductModalBtn').click(function() {
+            $('#showProductModalBtn').on('click', function() {
                 $('#productModal').removeClass('hidden');
             });
 
-            $('#closeProductModalBtn').click(function() {
+            $('#closeProductModalBtn').on('click', function() {
                 $('#productModal').addClass('hidden');
-                $('#product_name').val('');
-                $('#product_description').val('');
-                $('#product_price').val('');
+                $('#productForm')[0].reset();
             });
 
             $('#saveProductBtn').on('click', function() {
@@ -219,6 +217,8 @@
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
+                        console.log('Product created:', response);
+                        
                         // 新しい商品ボタンを作成
                         const button = $('<button>')
                             .attr('type', 'button')
@@ -241,10 +241,11 @@
                         initializeProductButton(button[0]);
 
                         // モーダルを閉じてフォームをリセット
-                        $('#productModal').hide();
+                        $('#productModal').addClass('hidden');
                         $('#productForm')[0].reset();
                     },
                     error: function(xhr) {
+                        console.error('Product creation error:', xhr);
                         const errors = xhr.responseJSON.errors;
                         let errorMessage = 'エラーが発生しました：\n';
                         for (const key in errors) {
