@@ -26,15 +26,12 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'default_price' => 'nullable|integer|min:0',
+            'default_price' => 'nullable|numeric|min:0',
+            'default_tax_type' => 'required|in:0,8,10'
         ]);
 
-        $product = new Product();
-        $product->user_id = auth()->id();
-        $product->name = $validated['name'];
-        $product->description = $validated['description'] ?? null;
-        $product->default_price = $validated['default_price'] ?? null;
-        $product->save();
+        $validated['user_id'] = auth()->id();
+        $product = Product::create($validated);
 
         if ($request->expectsJson()) {
             return response()->json($product);
@@ -56,12 +53,14 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'default_price' => 'nullable|integer|min:0',
+            'default_price' => 'nullable|numeric|min:0',
+            'default_tax_type' => 'required|in:0,8,10'
         ]);
 
         $product->name = $validated['name'];
         $product->description = $validated['description'] ?? null;
         $product->default_price = $validated['default_price'] ?? null;
+        $product->default_tax_type = $validated['default_tax_type'];
         $product->save();
 
         return redirect()->route('products.index')->with('success', '商品情報を更新しました。');

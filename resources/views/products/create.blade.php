@@ -30,6 +30,16 @@
                             <x-input-error class="mt-2" :messages="$errors->get('default_price')" />
                         </div>
 
+                        <div>
+                            <x-input-label for="default_tax_type" :value="__('標準税率')" />
+                            <select id="default_tax_type" name="default_tax_type" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                <option value="0">非課税</option>
+                                <option value="8">8%</option>
+                                <option value="10" selected>10%</option>
+                            </select>
+                            <x-input-error class="mt-2" :messages="$errors->get('default_tax_type')" />
+                        </div>
+
                         <div class="flex items-center gap-4">
                             <x-primary-button>{{ __('登録') }}</x-primary-button>
                         </div>

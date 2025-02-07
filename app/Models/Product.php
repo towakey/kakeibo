@@ -11,10 +11,11 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
         'name',
         'description',
-        'default_price'
+        'default_price',
+        'default_tax_type',
+        'user_id'
     ];
 
     protected $casts = [

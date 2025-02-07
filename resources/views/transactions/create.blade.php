@@ -52,7 +52,8 @@
                                                 class="product-button py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                 data-product-id="{{ $product->id }}"
                                                 data-product-name="{{ $product->name }}"
-                                                data-default-price="{{ $product->default_price }}">
+                                                data-default-price="{{ $product->default_price }}"
+                                                data-default-tax-type="{{ $product->default_tax_type }}">
                                             {{ $product->name }}
                                             @if($product->default_price)
                                                 <br><span class="text-sm text-gray-600">¥{{ number_format($product->default_price) }}</span>
@@ -104,30 +105,39 @@
     <div id="productModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900">新規商品登録</h3>
-                <form id="productForm" class="mt-4">
-                    @csrf
-                    <div class="mt-2">
-                        <x-input-label for="product_name" :value="__('商品名')" />
-                        <x-text-input id="product_name" type="text" class="mt-1 block w-full" required />
-                    </div>
-                    <div class="mt-2">
-                        <x-input-label for="product_description" :value="__('説明')" />
-                        <textarea id="product_description" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
-                    </div>
-                    <div class="mt-2">
-                        <x-input-label for="product_default_price" :value="__('標準価格')" />
-                        <x-text-input id="product_default_price" type="number" class="mt-1 block w-full" />
-                    </div>
-                    <div class="mt-4 flex justify-end">
-                        <button type="button" id="closeProductModalBtn" class="mr-2 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 border border-gray-300">
-                            キャンセル
-                        </button>
-                        <button type="button" id="submitProductBtn" class="px-4 py-2 bg-red-600 text-white font-semibold rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 border border-red-700 shadow-sm">
-                            登録する
-                        </button>
-                    </div>
-                </form>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">商品登録</h3>
+                <div class="mt-2 px-7 py-3">
+                    <form id="productForm">
+                        <div class="mb-4">
+                            <label for="product_name" class="block text-sm font-medium text-gray-700">商品名</label>
+                            <input type="text" id="product_name" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="product_description" class="block text-sm font-medium text-gray-700">説明</label>
+                            <textarea id="product_description" name="description" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label for="product_price" class="block text-sm font-medium text-gray-700">標準価格</label>
+                            <input type="number" id="product_price" name="default_price" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                        <div class="mb-4">
+                            <label for="product_tax_type" class="block text-sm font-medium text-gray-700">標準税率</label>
+                            <select id="product_tax_type" name="default_tax_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <option value="0">非課税</option>
+                                <option value="8">8%</option>
+                                <option value="10" selected>10%</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="closeProductModalBtn" class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        キャンセル
+                    </button>
+                    <button id="saveProductBtn" class="mt-3 px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                        登録
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -190,55 +200,59 @@
                 $('#productModal').addClass('hidden');
                 $('#product_name').val('');
                 $('#product_description').val('');
-                $('#product_default_price').val('');
+                $('#product_price').val('');
             });
 
-            $('#submitProductBtn').click(async function() {
-                const name = $('#product_name').val();
-                const description = $('#product_description').val();
-                const default_price = $('#product_default_price').val();
+            $('#saveProductBtn').on('click', function() {
+                const formData = {
+                    name: $('#product_name').val(),
+                    description: $('#product_description').val(),
+                    default_price: $('#product_price').val(),
+                    default_tax_type: $('#product_tax_type').val()
+                };
 
-                if (!name) {
-                    alert('商品名を入力してください');
-                    return;
-                }
+                $.ajax({
+                    url: '{{ route('products.store') }}',
+                    method: 'POST',
+                    data: {
+                        ...formData,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        // 新しい商品ボタンを作成
+                        const button = $('<button>')
+                            .attr('type', 'button')
+                            .addClass('product-button py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500')
+                            .attr('data-product-id', response.id)
+                            .attr('data-product-name', response.name)
+                            .attr('data-default-price', response.default_price)
+                            .attr('data-default-tax-type', response.default_tax_type);
 
-                try {
-                    const response = await fetch('{{ route("products.store") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        },
-                        body: JSON.stringify({ name, description, default_price })
-                    });
+                        // 商品名を設定
+                        const nameText = response.name;
+                        if (response.default_price) {
+                            button.html(`${nameText}<br><span class="text-sm text-gray-600">¥${Number(response.default_price).toLocaleString()}</span>`);
+                        } else {
+                            button.text(nameText);
+                        }
 
-                    if (!response.ok) throw new Error('商品の登録に失敗しました');
+                        // 商品ボタンを追加
+                        $('#productButtons').append(button);
+                        initializeProductButton(button[0]);
 
-                    const product = await response.json();
-                    const button = $('<button>')
-                        .attr('type', 'button')
-                        .addClass('product-button py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500')
-                        .attr('data-product-id', product.id)
-                        .attr('data-product-name', product.name)
-                        .attr('data-default-price', product.default_price);
-
-                    let buttonContent = product.name;
-                    if (product.default_price) {
-                        buttonContent += `<br><span class="text-sm text-gray-600">¥${Number(product.default_price).toLocaleString()}</span>`;
+                        // モーダルを閉じてフォームをリセット
+                        $('#productModal').hide();
+                        $('#productForm')[0].reset();
+                    },
+                    error: function(xhr) {
+                        const errors = xhr.responseJSON.errors;
+                        let errorMessage = 'エラーが発生しました：\n';
+                        for (const key in errors) {
+                            errorMessage += `${errors[key]}\n`;
+                        }
+                        alert(errorMessage);
                     }
-                    button.html(buttonContent);
-
-                    $('#productButtons').append(button);
-                    initializeProductButton(button[0]);
-                    $('#productModal').addClass('hidden');
-                    $('#product_name').val('');
-                    $('#product_description').val('');
-                    $('#product_default_price').val('');
-                } catch (error) {
-                    alert(error.message);
-                }
+                });
             });
 
             // Initialize existing buttons
@@ -251,27 +265,29 @@
             }
 
             function initializeProductButton(button) {
-                $(button).click(function() {
+                $(button).on('click', function() {
                     const productId = $(this).data('product-id');
-                    const isSelected = $(this).hasClass('bg-indigo-500');
+                    const productName = $(this).data('product-name');
+                    const defaultPrice = $(this).data('default-price');
+                    const defaultTaxType = $(this).data('default-tax-type');
+                    const rowId = `product-row-${productId}`;
                     
-                    if (isSelected) {
+                    // 商品が既に選択されているか確認
+                    if ($(`#${rowId}`).length) {
+                        // 選択解除
+                        $(`#${rowId}`).remove();
                         $(this).removeClass('bg-indigo-500 text-white');
-                        $(`#product-row-${productId}`).remove();
                     } else {
+                        // 新規選択
                         $(this).addClass('bg-indigo-500 text-white');
-                        addProductRow(
-                            productId,
-                            $(this).data('product-name'),
-                            $(this).data('default-price')
-                        );
+                        addProductRow(productId, productName, defaultPrice, defaultTaxType);
                     }
                 });
             }
 
-            function addProductRow(productId, productName, defaultPrice) {
+            function addProductRow(productId, productName, defaultPrice, defaultTaxType) {
                 const rowId = `product-row-${productId}`;
-                console.log('Adding product row:', { productId, productName, defaultPrice });
+                console.log('Adding product row:', { productId, productName, defaultPrice, defaultTaxType });
                 
                 if (!$(`#${rowId}`).length) {
                     const row = $('<div>')
@@ -292,9 +308,9 @@
                                 </label>
                                 <label class="whitespace-nowrap">消費税:
                                     <select name="products[${productId}][tax_type]" class="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 product-tax">
-                                        <option value="0">非課税</option>
-                                        <option value="8">8%</option>
-                                        <option value="10" selected>10%</option>
+                                        <option value="0" ${defaultTaxType == 0 ? 'selected' : ''}>非課税</option>
+                                        <option value="8" ${defaultTaxType == 8 ? 'selected' : ''}>8%</option>
+                                        <option value="10" ${defaultTaxType == 10 ? 'selected' : ''}>10%</option>
                                     </select>
                                 </label>
                                 <label class="whitespace-nowrap">割引額:
@@ -324,7 +340,53 @@
                         `);
                     $('#selected-products').append(row);
                     console.log('Product row added:', row.html());
+                    
+                    // 価格計算のイベントリスナーを設定
+                    const productRow = $(`#${rowId}`);
+                    setupPriceCalculation(productRow);
                 }
+            }
+
+            // 価格計算の設定
+            function setupPriceCalculation(productRow) {
+                const quantityInput = productRow.find('.product-quantity');
+                const discountAmountInput = productRow.find('.product-discount-amount');
+                const discountRateInput = productRow.find('.product-discount-rate');
+                const priceInput = productRow.find('.product-price');
+                const basePrice = parseFloat(priceInput.data('base-price')) || 0;
+
+                const calculatePrice = () => {
+                    const quantity = parseFloat(quantityInput.val()) || 1;
+                    const discountAmount = parseFloat(discountAmountInput.val()) || 0;
+                    const discountRate = parseFloat(discountRateInput.val()) || 0;
+                    
+                    let price = basePrice * quantity;
+                    if (discountAmount > 0) {
+                        price -= discountAmount;
+                    } else if (discountRate > 0) {
+                        price -= price * (discountRate / 100);
+                    }
+                    
+                    priceInput.val(Math.max(0, Math.round(price)));
+                };
+
+                // イベントリスナーを設定
+                quantityInput.on('input', calculatePrice);
+                discountAmountInput.on('input', () => {
+                    if (discountAmountInput.val()) {
+                        discountRateInput.val('');
+                    }
+                    calculatePrice();
+                });
+                discountRateInput.on('input', () => {
+                    if (discountRateInput.val()) {
+                        discountAmountInput.val('');
+                    }
+                    calculatePrice();
+                });
+
+                // 初期計算
+                calculatePrice();
             }
 
             // Initialize existing buttons
