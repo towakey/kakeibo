@@ -33,7 +33,7 @@
                                             {{ $transaction->transaction_date }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $transaction->store->name }}
+                                            {{ $transaction->store->name ?? '未設定' }}
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-900">
                                             <div class="space-y-2">
