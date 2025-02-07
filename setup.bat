@@ -12,11 +12,15 @@ if not exist database (
     mkdir database
 )
 
-REM Create SQLite database file if it doesn't exist
-if not exist database\database.sqlite (
-    type nul > database\database.sqlite
-    echo Created SQLite database file
+REM Remove existing SQLite database file if it exists
+if exist database\database.sqlite (
+    del database\database.sqlite
+    echo Removed existing SQLite database file
 )
+
+REM Create SQLite database file
+type nul > database\database.sqlite
+echo Created SQLite database file
 
 REM Install Composer dependencies
 echo Installing Composer dependencies...
@@ -32,7 +36,7 @@ php artisan key:generate
 
 REM Run database migrations
 echo Running database migrations...
-php artisan migrate
+php artisan migrate:fresh
 
 REM Run database seeder
 echo Running database seeders...
