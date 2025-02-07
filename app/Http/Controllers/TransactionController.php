@@ -78,8 +78,8 @@ class TransactionController extends Controller
         $transactions = Transaction::with(['store', 'products'])
             ->where('user_id', auth()->id())
             ->orderBy('transaction_date', 'desc')
-            ->get();
-
-        return view('dashboard', compact('transactions'));
+            ->paginate(10);
+        
+        return view('transactions.index', compact('transactions'));
     }
 }
