@@ -25,7 +25,7 @@
                                     <i class="fas fa-plus"></i> 新規店舗登録
                                 </button>
                             </div>
-                            <input type="hidden" name="store_id" id="store_id">
+                            <input type="hidden" name="store_id" id="store_id" required>
                             <div class="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="storeButtons">
                                 @foreach($stores as $store)
                                     <button type="button"
@@ -271,6 +271,7 @@
 
             function addProductRow(productId, productName, defaultPrice) {
                 const rowId = `product-row-${productId}`;
+                console.log('Adding product row:', { productId, productName, defaultPrice });
                 
                 if (!$(`#${rowId}`).length) {
                     const row = $('<div>')
@@ -322,6 +323,7 @@
                             </div>
                         `);
                     $('#selected-products').append(row);
+                    console.log('Product row added:', row.html());
                 }
             }
 
@@ -332,6 +334,40 @@
 
             $('.product-button').each(function() {
                 initializeProductButton(this);
+            });
+
+            // フォーム送信時のデータをコンソールに出力
+            $('#transactionForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = $(this).serializeArray();
+                console.log('Form data:', formData);
+                
+                // フォームデータの詳細をコンソールに出力
+                const formObject = {};
+                formData.forEach(item => {
+                    formObject[item.name] = item.value;
+                });
+                console.log('Form data as object:', formObject);
+                
+                // 選択された商品の情報を出力
+                console.log('Selected products:', $('#selected-products').find('input').serializeArray());
+                
+                // フォームデータを確認
+                const hasStoreId = $('#store_id').val();
+                const hasProducts = $('#selected-products').children().length > 0;
+                
+                if (!hasStoreId) {
+                    alert('店舗を選択してください。');
+                    return false;
+                }
+                
+                if (!hasProducts) {
+                    alert('商品を1つ以上選択してください。');
+                    return false;
+                }
+                
+                this.submit();
             });
         });
     </script>
@@ -354,18 +390,40 @@ document.addEventListener('DOMContentLoaded', function() {
     const discountAmount = parseFloat(discountAmountInput.value) || 0;
     const discountRate = parseFloat(discountRateInput.value) || 0;
     
-    let discount = 0;
+    let price = basePrice;
+    
+    // 割引額を適用
     if (discountAmount > 0) {
-      discount = discountAmount;
-    } else if (discountRate > 0) {
-      discount = basePrice * quantity * (discountRate / 100);
+      price = price - discountAmount;
     }
-    let finalPrice = (basePrice * quantity - discount);
+    
+    // 割引率を適用
+    if (discountRate > 0) {
+      price = price * (1 - discountRate / 100);
+    }
+    
+    // 消費税を適用
     if (taxRate > 0) {
-      finalPrice = finalPrice * (1 + taxRate / 100);
+      price = price * (1 + taxRate / 100);
     }
-    console.log('recalcPrice called:', { basePrice, quantity, taxRate, discountAmount, discountRate, finalPrice });
-    priceInput.value = finalPrice.toFixed(2);
+    
+    // 数量を乗算
+    price = price * quantity;
+    
+    // 小数点以下を切り捨て
+    price = Math.floor(price);
+    
+    console.log('recalcPrice called:', {
+      basePrice,
+      quantity,
+      taxRate,
+      discountAmount,
+      discountRate,
+      finalPrice: price
+    });
+
+    // 計算結果を価格フィールドに設定
+    priceInput.value = price;
   }
   
   document.addEventListener('input', function(e) {
