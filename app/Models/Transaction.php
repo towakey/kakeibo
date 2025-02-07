@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
 use App\Models\Store;
 use App\Models\Product;
+use App\Models\Category;
 
 class Transaction extends Model
 {
@@ -16,6 +17,7 @@ class Transaction extends Model
         'user_id',
         'transaction_date',
         'store_id',
+        'category_id',
     ];
 
     protected $casts = [
@@ -25,6 +27,11 @@ class Transaction extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 
     public function store()
