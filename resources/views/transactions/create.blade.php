@@ -48,7 +48,7 @@
                             </div>
                             <input type="hidden" name="category_id" id="selected_category_id" value="{{ old('category_id') }}">
                             <div id="categoryButtons" class="mt-2 flex flex-wrap gap-2">
-                                @foreach (Auth::user()->categories()->orderBy('name')->get() as $category)
+                                @foreach ($categories as $category)
                                     <button type="button"
                                         class="category-button py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 {{ old('category_id') == $category->id ? 'bg-indigo-500 text-white' : '' }}"
                                         data-category-id="{{ $category->id }}"
@@ -67,27 +67,23 @@
                                     <i class="fas fa-plus"></i> 新規商品登録
                                 </button>
                             </div>
-                            <div class="mt-2 space-y-4">
-                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="productButtons">
-                                    @foreach($products as $product)
-                                        <button type="button"
-                                                class="product-button py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                data-product-id="{{ $product->id }}"
-                                                data-product-name="{{ $product->name }}"
-                                                data-default-price="{{ $product->default_price }}"
-                                                data-default-tax-type="{{ $product->default_tax_type }}">
-                                            {{ $product->name }}
-                                            @if($product->default_price)
-                                                <br><span class="text-sm text-gray-600">¥{{ number_format($product->default_price) }}</span>
-                                            @endif
-                                        </button>
-                                    @endforeach
-                                </div>
-                                <div id="selected-products" class="mt-4">
-                                    <!-- Selected products will be displayed here -->
-                                </div>
+                            <div id="productButtons" class="mt-2 flex flex-wrap gap-2">
+                                @foreach (Auth::user()->products()->orderBy('name')->get() as $product)
+                                    <button type="button"
+                                        class="product-button py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        data-product-id="{{ $product->id }}"
+                                        data-product-name="{{ $product->name }}"
+                                        data-default-price="{{ $product->default_price }}"
+                                        data-default-tax-type="{{ $product->default_tax_type }}">
+                                        {{ $product->name }}
+                                        @if ($product->default_price)
+                                            <br><span class="text-sm text-gray-600">¥{{ number_format($product->default_price) }}</span>
+                                        @endif
+                                    </button>
+                                @endforeach
                             </div>
-                            <x-input-error class="mt-2" :messages="$errors->get('products')" />
+                            <div id="selected-products" class="mt-4">
+                            </div>
                         </div>
 
                         <div class="flex items-center gap-4">
@@ -257,16 +253,14 @@
                     name: $('#product_name').val(),
                     description: $('#product_description').val(),
                     default_price: $('#product_price').val(),
-                    default_tax_type: $('#product_tax_type').val()
+                    default_tax_type: $('#product_tax_type').val(),
+                    _token: '{{ csrf_token() }}'
                 };
 
                 $.ajax({
                     url: '{{ route('products.store') }}',
                     method: 'POST',
-                    data: {
-                        ...formData,
-                        _token: '{{ csrf_token() }}'
-                    },
+                    data: formData,
                     success: function(response) {
                         console.log('Product created:', response);
                         
@@ -307,6 +301,59 @@
                 });
             });
 
+            // カテゴリボタンのクリックイベント
+            $(document).on('click', '.category-button', function() {
+                // 他のカテゴリーボタンから選択状態を解除
+                $('.category-button').removeClass('bg-indigo-500 text-white');
+                // クリックされたボタンを選択状態にする
+                $(this).addClass('bg-indigo-500 text-white');
+                // 選択されたカテゴリーIDを hidden input に設定
+                $('#selected_category_id').val($(this).data('category-id'));
+            });
+
+            // 新規カテゴリー登録モーダルの処理
+            $('#saveCategoryBtn').on('click', function() {
+                const formData = {
+                    name: $('#category_name').val(),
+                    description: $('#category_description').val(),
+                    _token: '{{ csrf_token() }}'
+                };
+
+                $.ajax({
+                    url: '{{ route('categories.store') }}',
+                    method: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        console.log('Category created:', response);
+                        
+                        // 新しいカテゴリーボタンを作成
+                        const button = $('<button>')
+                            .attr('type', 'button')
+                            .addClass('category-button py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500')
+                            .attr('data-category-id', response.id)
+                            .attr('data-category-name', response.name)
+                            .text(response.name);
+
+                        // カテゴリーボタンを追加
+                        $('#categoryButtons').append(button);
+                        
+                        // モーダルを閉じてフォームをリセット
+                        $('#categoryModal').addClass('hidden');
+                        $('#category_name').val('');
+                        $('#category_description').val('');
+                    },
+                    error: function(xhr) {
+                        console.error('Category creation error:', xhr);
+                        const errors = xhr.responseJSON.errors;
+                        let errorMessage = 'エラーが発生しました：\n';
+                        for (const key in errors) {
+                            errorMessage += `${errors[key]}\n`;
+                        }
+                        alert(errorMessage);
+                    }
+                });
+            });
+
             // カテゴリボタンの機能
             function initializeCategoryButton(button) {
                 $(button).on('click', function() {
@@ -337,53 +384,6 @@
             $('#closeCategoryModalBtn').on('click', function() {
                 $('#categoryModal').addClass('hidden');
                 $('#categoryForm')[0].reset();
-            });
-
-            $('#saveCategoryBtn').on('click', function() {
-                const formData = {
-                    name: $('#category_name').val(),
-                    description: $('#category_description').val(),
-                };
-
-                $.ajax({
-                    url: '{{ route('categories.store') }}',
-                    method: 'POST',
-                    data: {
-                        ...formData,
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        console.log('Category created:', response);
-                        
-                        // 新しいカテゴリボタンを作成
-                        const button = $('<button>')
-                            .attr('type', 'button')
-                            .addClass('category-button py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500')
-                            .attr('data-category-id', response.id)
-                            .attr('data-category-name', response.name)
-                            .text(response.name);
-
-                        // カテゴリボタンを追加
-                        $('#categoryButtons').append(button);
-                        initializeCategoryButton(button[0]);
-
-                        // 新しいカテゴリを選択状態に
-                        button.trigger('click');
-
-                        // モーダルを閉じてフォームをリセット
-                        $('#categoryModal').addClass('hidden');
-                        $('#categoryForm')[0].reset();
-                    },
-                    error: function(xhr) {
-                        console.error('Category creation error:', xhr);
-                        const errors = xhr.responseJSON.errors;
-                        let errorMessage = 'エラーが発生しました：\n';
-                        for (const key in errors) {
-                            errorMessage += `${errors[key]}\n`;
-                        }
-                        alert(errorMessage);
-                    }
-                });
             });
 
             // Initialize existing buttons
@@ -480,15 +480,15 @@
 
             function setupPriceCalculation(productRow) {
                 const quantityInput = productRow.find('.product-quantity');
+                const taxSelect = productRow.find('select.product-tax');
                 const discountAmountInput = productRow.find('.product-discount-amount');
                 const discountRateInput = productRow.find('.product-discount-rate');
                 const priceInput = productRow.find('.product-price');
-                const taxTypeSelect = productRow.find('select.product-tax');
                 const basePrice = parseFloat(priceInput.data('base-price')) || 0;
 
                 const calculatePrice = () => {
                     const quantity = parseFloat(quantityInput.val()) || 1;
-                    const taxRate = parseFloat(taxTypeSelect.val()) || 0;
+                    const taxRate = parseFloat(taxSelect.val()) || 0;
                     const discountAmount = parseFloat(discountAmountInput.val()) || 0;
                     const discountRate = parseFloat(discountRateInput.val()) || 0;
                     
@@ -531,7 +531,7 @@
 
                 // イベントリスナーを設定
                 quantityInput.on('input', calculatePrice);
-                taxTypeSelect.on('change', calculatePrice);
+                taxSelect.on('change', calculatePrice);
                 discountAmountInput.on('input', () => {
                     if (discountAmountInput.val()) {
                         discountRateInput.val('');
@@ -582,17 +582,17 @@
                 
                 if (!hasStoreId) {
                     alert('店舗を選択してください。');
-                    return false;
+                    return;
                 }
                 
                 if (!hasCategoryId) {
                     alert('カテゴリを選択してください。');
-                    return false;
+                    return;
                 }
                 
                 if (!hasProducts) {
                     alert('商品を1つ以上選択してください。');
-                    return false;
+                    return;
                 }
                 
                 this.submit();

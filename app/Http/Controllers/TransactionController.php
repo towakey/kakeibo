@@ -17,7 +17,10 @@ class TransactionController extends Controller
     {
         $stores = Store::where('user_id', auth()->id())->get();
         $products = Product::where('user_id', auth()->id())->get();
-        $categories = Category::where('user_id', auth()->id())->get();
+        $categories = Category::where(function($query) {
+            $query->whereNull('user_id')
+                  ->orWhere('user_id', auth()->id());
+        })->get();
         return view('transactions.create', compact('stores', 'products', 'categories'));
     }
 
