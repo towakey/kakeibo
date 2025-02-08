@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\Transaction;
 use App\Models\Store;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class TransactionController extends Controller
 {
+    use AuthorizesRequests;
+
     public function create()
     {
         $stores = Store::where('user_id', auth()->id())->get();
@@ -67,5 +70,38 @@ class TransactionController extends Controller
             ->paginate(10);
         
         return view('transactions.index', compact('transactions'));
+    }
+
+    /**
+     * 指定された取引を削除
+     */
+    public function destroy(Transaction $transaction)
+    {
+        // 認可チェック
+        $this->authorize('delete', $transaction);
+
+        try {
+            // トランザクションを開始
+            DB::beginTransaction();
+
+            // 関連する商品を削除
+            $transaction->products()->detach();
+
+            // 取引を削除
+            $transaction->delete();
+
+            // トランザクションをコミット
+            DB::commit();
+
+            return redirect()->route('transactions.index')
+                ->with('success', '取引を削除しました。');
+
+        } catch (\Exception $e) {
+            // エラー時はロールバック
+            DB::rollBack();
+            
+            return redirect()->route('transactions.index')
+                ->with('error', '取引の削除に失敗しました。');
+        }
     }
 }
